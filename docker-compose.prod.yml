@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: ${REGISTRY_NAME}/ihsan-frontend:${IMAGE_TAG:-latest}
+    environment:
+      - VITE_API_URL=/api
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: ${REGISTRY_NAME}/ihsan-backend:${IMAGE_TAG:-latest}
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}

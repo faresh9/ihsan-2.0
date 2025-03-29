@@ -1,0 +1,51 @@
+name: ihsan-app
+region: nyc
+services:
+  - name: frontend
+    github:
+      repo: faresh9/ihsan-2.0
+      branch: main
+    dockerfile_path: Dockerfile.frontend
+    source_dir: /
+    http_port: 80
+    routes:
+      - path: /
+    envs:
+      - key: VITE_API_URL
+        value: /api
+        scope: RUN_TIME
+
+  - name: backend
+    github:
+      repo: faresh9/ihsan-2.0
+      branch: main
+    dockerfile_path: Dockerfile.backend
+    source_dir: /
+    http_port: 3000
+    routes:
+      - path: /api
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        value: "${JWT_SECRET}"
+        type: SECRET
+      - key: DB_HOST
+        value: "${DB_HOST}"
+      - key: DB_PORT
+        value: "${DB_PORT}"
+      - key: DB_USERNAME
+        value: "${DB_USERNAME}"
+        type: SECRET
+      - key: DB_PASSWORD
+        value: "${DB_PASSWORD}"
+        type: SECRET
+      - key: DB_DATABASE
+        value: "${DB_DATABASE}"
+
+databases:
+  - name: ihsan-db
+    engine: PG
+    version: "15"
+    production: true
+    cluster_name: your-cluster-name
