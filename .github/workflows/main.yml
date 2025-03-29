@@ -1,0 +1,91 @@
+name: Deploy to DigitalOcean Droplet
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+          cd ../
+          npm ci
+          
+      - name: Run backend tests
+        run: |
+          cd backend
+          npm test
+          
+      - name: Run frontend tests
+        run: |
+          npm test
+
+  build-and-deploy:
+    name: Build and Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      
+      - name: Build and export backend
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile.backend
+          tags: ihsan/backend:latest
+          outputs: type=docker,dest=/tmp/backend.tar
+      
+      - name: Build and export frontend
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          tags: ihsan/frontend:latest
+          outputs: type=docker,dest=/tmp/frontend.tar
+      
+      - name: Upload deployment files
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          source: "docker-compose.prod.yml,nginx-prod.conf,.env.production"
+          target: "/opt/ihsan"
+      
+      - name: Upload Docker images
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          source: "/tmp/backend.tar,/tmp/frontend.tar"
+          target: "/tmp"
+      
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            cd /opt/ihsan
+            docker load -i /tmp/backend.tar
+            docker load -i /tmp/frontend.tar
+            docker-compose -f docker-compose.prod.yml down
+            docker-compose -f docker-compose.prod.yml up -d
