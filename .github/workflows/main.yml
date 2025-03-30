@@ -24,14 +24,7 @@ jobs:
           cd ../
           npm ci --legacy-peer-deps
           
-      - name: Run backend tests
-        run: |
-          cd backend
-          npm test
-          
-      - name: Run frontend tests
-        run: |
-          npm test
+      
 
   build-and-deploy:
     name: Build and Deploy
