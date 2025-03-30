@@ -2,23 +2,54 @@ version: '3.8'
 
 services:
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    image: ${REGISTRY_NAME}/ihsan-frontend:${IMAGE_TAG:-latest}
+    image: ${REGISTRY_NAME:-ihsan}/frontend:${IMAGE_TAG:-latest}
+    restart: always
+    ports:
+      - "8080:80"
     environment:
       - VITE_API_URL=/api
 
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    image: ${REGISTRY_NAME}/ihsan-backend:${IMAGE_TAG:-latest}
+    image: ${REGISTRY_NAME:-ihsan}/backend:${IMAGE_TAG:-latest}
+    restart: always
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=production
       - JWT_SECRET=${JWT_SECRET}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
+      - DB_HOST=${DB_HOST:-localhost}
+      - DB_PORT=${DB_PORT:-5432}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_DATABASE=${DB_DATABASE}
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_DB=${DB_DATABASE}
+    ports:
+      - "5432:5432"
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-prod.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  postgres_data:
