@@ -28,10 +28,10 @@ import { EventsModule } from './events/events.module';
         password: configService.get('DB_PASSWORD', 'postgres'),
         database: configService.get('DB_DATABASE', 'ihsan'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false,
+        synchronize: true,
         migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
         logging: configService.get('NODE_ENV') !== 'production',
-        autoLoadEntities: false
+        autoLoadEntities: true
       }),
     }),
     
