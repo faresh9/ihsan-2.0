@@ -32,33 +32,33 @@ const App = () => (
             <Route
               path="/"
               element={
-                <ProtectedRoute>
+                
                   <Index />
-                </ProtectedRoute>
+                
               }
             />
             <Route
               path="/calendar"
               element={
-                <ProtectedRoute>
+                
                   <Calendar />
-                </ProtectedRoute>
+                
               }
             />
             <Route
               path="/tasks"
               element={
-                <ProtectedRoute>
+                
                   <Tasks />
-                </ProtectedRoute>
+                
               }
             />
             <Route
               path="/notes"
               element={
-                <ProtectedRoute>
+                
                   <Notes />
-                </ProtectedRoute>
+                
               }
             />
             <Route path="*" element={<NotFound />} />
