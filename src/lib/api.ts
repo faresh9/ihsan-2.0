@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Change this to use the API prefix
-const API_URL = 'http://localhost:3000/api';
+const API_URL = '/api';
 
 // Create axios instance
 const api = axios.create({
