@@ -1,0 +1,149 @@
+name: Rebuild Docker Images
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'          # Frontend code changes
+      - 'backend/**'      # Backend code changes
+      - 'public/**'       # Frontend assets
+      - 'Dockerfile.*'    # Dockerfile changes
+  workflow_dispatch:
+    inputs:
+      component:
+        description: 'Component to rebuild (frontend, backend, or both)'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - frontend
+          - backend
+          - both
+
+jobs:
+  determine-changes:
+    name: Determine Changes
+    runs-on: ubuntu-latest
+    outputs:
+      rebuild_frontend: ${{ steps.check-changes.outputs.rebuild_frontend }}
+      rebuild_backend: ${{ steps.check-changes.outputs.rebuild_backend }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      
+      - id: check-changes
+        name: Check changed files
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual trigger with specified component
+            if [ "${{ github.event.inputs.component }}" = "frontend" ]; then
+              echo "rebuild_frontend=true" >> $GITHUB_OUTPUT
+              echo "rebuild_backend=false" >> $GITHUB_OUTPUT
+            elif [ "${{ github.event.inputs.component }}" = "backend" ]; then
+              echo "rebuild_frontend=false" >> $GITHUB_OUTPUT
+              echo "rebuild_backend=true" >> $GITHUB_OUTPUT
+            else
+              echo "rebuild_frontend=true" >> $GITHUB_OUTPUT
+              echo "rebuild_backend=true" >> $GITHUB_OUTPUT
+            fi
+          else
+            # Auto-detection based on changed files
+            git diff --name-only HEAD^ HEAD > changes.txt
+            
+            if grep -q "src\|public\|Dockerfile.frontend" changes.txt; then
+              echo "Frontend changes detected"
+              echo "rebuild_frontend=true" >> $GITHUB_OUTPUT
+            else
+              echo "No frontend changes"
+              echo "rebuild_frontend=false" >> $GITHUB_OUTPUT
+            fi
+            
+            if grep -q "backend\|Dockerfile.backend" changes.txt; then
+              echo "Backend changes detected"
+              echo "rebuild_backend=true" >> $GITHUB_OUTPUT
+            else
+              echo "No backend changes"
+              echo "rebuild_backend=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+          
+          cat $GITHUB_OUTPUT
+
+  rebuild-frontend:
+    name: Rebuild Frontend
+    needs: determine-changes
+    if: needs.determine-changes.outputs.rebuild_frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build frontend image
+        run: |
+          docker build -t ihsan/frontend:latest -f Dockerfile.frontend .
+          
+      - name: Save Docker image to file
+        run: |
+          mkdir -p ./artifacts
+          docker save ihsan/frontend:latest > ./artifacts/frontend.tar
+          
+      - name: Upload image to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          source: "./artifacts/frontend.tar"
+          target: "/tmp"
+          
+      - name: Update frontend container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            echo "Updating frontend container..."
+            cd /opt/ihsan
+            docker load < /tmp/frontend.tar
+            docker-compose -f docker-compose.prod.yml up -d frontend
+            rm -f /tmp/frontend.tar
+
+  rebuild-backend:
+    name: Rebuild Backend
+    needs: determine-changes
+    if: needs.determine-changes.outputs.rebuild_backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build backend image
+        run: |
+          docker build -t ihsan/backend:latest -f Dockerfile.backend .
+          
+      - name: Save Docker image to file
+        run: |
+          mkdir -p ./artifacts
+          docker save ihsan/backend:latest > ./artifacts/backend.tar
+          
+      - name: Upload image to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          source: "./artifacts/backend.tar"
+          target: "/tmp"
+          
+      - name: Update backend container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            echo "Updating backend container..."
+            cd /opt/ihsan
+            docker load < /tmp/backend.tar
+            docker-compose -f docker-compose.prod.yml up -d backend
+            rm -f /tmp/backend.tar
