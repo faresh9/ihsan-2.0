@@ -137,7 +137,14 @@ const defaultPomodoroSettings: PomodoroSettings = {
   sessionsUntilLongBreak: 4,
 };
 
-const useStore = create<AppState>()(
+const useStore = create((set) => ({
+  tasks: [], // Initialize as empty array, not null or undefined
+  notes: [],
+  events: [],
+  // ...other store properties and methods
+}));
+
+const useStorePersisted = create<AppState>()(
   persist(
     (set, get) => ({
       tasks: [],
@@ -451,4 +458,4 @@ const useStore = create<AppState>()(
   )
 );
 
-export default useStore;
+export default useStorePersisted;

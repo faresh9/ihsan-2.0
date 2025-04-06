@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import DashboardLayout from '@/components/layout/Dashboard';
 import TaskList from '@/components/tasks/TaskList';
 import PomodoroTimer from '@/components/timer/PomodoroTimer';
@@ -17,21 +16,28 @@ import useStore from '@/lib/store';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { tasks, notes, events } = useStore();
+  const { tasks, notes, events, fetchTasks, fetchNotes, fetchEvents } = useStore();
   
-  // Get incomplete tasks
-  const incompleteTasks = tasks.filter(task => !task.completed);
+  // Fetch data on component mount
+  useEffect(() => {
+    if (typeof fetchTasks === 'function') fetchTasks();
+    if (typeof fetchNotes === 'function') fetchNotes();
+    if (typeof fetchEvents === 'function') fetchEvents();
+  }, []);
   
-  // Get today's events
+  // Get incomplete tasks with null check
+  const incompleteTasks = Array.isArray(tasks) ? tasks.filter(task => !task.completed) : [];
+  
+  // Get today's events with null check
   const today = new Date();
-  const todaysEvents = events.filter(event => {
+  const todaysEvents = Array.isArray(events) ? events.filter(event => {
     const eventDate = new Date(event.start);
     return (
       eventDate.getDate() === today.getDate() &&
       eventDate.getMonth() === today.getMonth() &&
       eventDate.getFullYear() === today.getFullYear()
     );
-  });
+  }) : [];
   
   return (
     <DashboardLayout>
