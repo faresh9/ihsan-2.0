@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, Circle, FileText, Calendar } from 'lucide-react';
@@ -37,20 +36,26 @@ const RecentActivity = () => {
   const lastWeek = new Date();
   lastWeek.setDate(lastWeek.getDate() - 7);
   
-  const recentTasks = tasks
-    .filter(task => new Date(task.createdAt) > lastWeek)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+  const recentTasks = Array.isArray(tasks)
+    ? tasks
+      .filter(task => new Date(task.createdAt) > lastWeek)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5)
+    : [];
     
-  const recentNotes = notes
-    .filter(note => new Date(note.createdAt) > lastWeek)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+  const recentNotes = Array.isArray(notes)
+    ? notes
+      .filter(note => new Date(note.createdAt) > lastWeek)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5)
+    : [];
     
-  const upcomingEvents = events
-    .filter(event => !isPast(new Date(event.end)) || isToday(new Date(event.end)))
-    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
-    .slice(0, 5);
+  const upcomingEvents = Array.isArray(events)
+    ? events
+      .filter(event => !isPast(new Date(event.end)) || isToday(new Date(event.end)))
+      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+      .slice(0, 5)
+    : [];
   
   // Combine and sort by date
   const activities: Activity[] = [

@@ -41,7 +41,9 @@ const CalendarView: React.FC = () => {
   };
 
   const eventsForSelectedDate = selectedDate
-    ? events.filter((event) => isSameDay(new Date(event.start), selectedDate))
+    ? Array.isArray(events)
+      ? events.filter((event) => isSameDay(new Date(event.start), selectedDate))
+      : []
     : [];
 
   const handleAddEvent = () => {

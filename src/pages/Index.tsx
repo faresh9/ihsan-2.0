@@ -4,6 +4,7 @@ import TaskList from '@/components/tasks/TaskList';
 import PomodoroTimer from '@/components/timer/PomodoroTimer';
 import PrayerTimes from '@/components/prayer/PrayerTimes';
 import CalendarView from '@/components/calendar/Calendar';
+import MiniCalendar from '@/components/calendar/MiniCalendar';
 import WelcomeMessage from '@/components/dashboard/WelcomeMessage';
 import RecentActivity from '@/components/dashboard/RecentActivity';
 import QuickAdd from '@/components/dashboard/QuickAdd';
@@ -165,7 +166,7 @@ const Index = () => {
               <Button size="sm" onClick={() => navigate('/calendar')}>View Full</Button>
             </CardHeader>
             <CardContent>
-              <CalendarView />
+              <MiniCalendar />
             </CardContent>
           </Card>
         </div>

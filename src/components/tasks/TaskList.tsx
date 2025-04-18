@@ -67,30 +67,32 @@ const TaskList: React.FC = () => {
     setIsDialogOpen(true);
   };
 
-  const filteredTasks = tasks
-    .filter(task => {
-      if (filter === 'active') return !task.completed;
-      if (filter === 'completed') return task.completed;
-      return true;
-    })
-    .filter(task => {
-      if (categoryFilter) return task.category === categoryFilter;
-      return true;
-    })
-    .sort((a, b) => {
-      if (a.completed !== b.completed) {
-        return a.completed ? 1 : -1;
-      }
-      
-      if (a.dueDate && b.dueDate) {
-        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-      }
-      
-      if (a.dueDate) return -1;
-      if (b.dueDate) return 1;
-      
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+  const filteredTasks = Array.isArray(tasks) 
+    ? tasks
+      .filter(task => {
+        if (filter === 'active') return !task.completed;
+        if (filter === 'completed') return task.completed;
+        return true;
+      })
+      .filter(task => {
+        if (categoryFilter) return task.category === categoryFilter;
+        return true;
+      })
+      .sort((a, b) => {
+        if (a.completed !== b.completed) {
+          return a.completed ? 1 : -1;
+        }
+        
+        if (a.dueDate && b.dueDate) {
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        }
+        
+        if (a.dueDate) return -1;
+        if (b.dueDate) return 1;
+        
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      })
+    : []; // Return empty array if tasks is not an array
 
   return (
     <div className="space-y-6 animate-slide-up">

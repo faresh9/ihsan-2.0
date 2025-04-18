@@ -163,10 +163,10 @@ const useStorePersisted = create<AppState>()(
         set({ tasksLoading: true });
         try {
           const tasks = await getTasks();
-          set({ tasks, tasksLoading: false });
+          set({ tasks: Array.isArray(tasks) ? tasks : [], tasksLoading: false });
         } catch (error) {
           console.error('Error fetching tasks:', error);
-          set({ tasksLoading: false });
+          set({ tasksLoading: false, tasks: [] }); // Reset to empty array on error
         }
       },
       
@@ -174,10 +174,10 @@ const useStorePersisted = create<AppState>()(
         set({ notesLoading: true });
         try {
           const notes = await getNotes();
-          set({ notes, notesLoading: false });
+          set({ notes: Array.isArray(notes) ? notes : [], notesLoading: false });
         } catch (error) {
           console.error('Error fetching notes:', error);
-          set({ notesLoading: false });
+          set({ notesLoading: false, notes: [] }); // Reset to empty array on error
         }
       },
       
@@ -185,10 +185,10 @@ const useStorePersisted = create<AppState>()(
         set({ eventsLoading: true });
         try {
           const events = await getEvents();
-          set({ events, eventsLoading: false });
+          set({ events: Array.isArray(events) ? events : [], eventsLoading: false });
         } catch (error) {
           console.error('Error fetching events:', error);
-          set({ eventsLoading: false });
+          set({ eventsLoading: false, events: [] }); // Reset to empty array on error
         }
       },
       

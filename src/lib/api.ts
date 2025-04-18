@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 
-// Change this to use the API prefix
-const API_URL = '/api';
-
+// More specific IPv6 support
+const API_URL = import.meta.env.DEV
+  ? 'http://[::1]:3000/api'  // IPv6 localhost
+  : '/api';
+  
+  console.log('API mode:', import.meta.env.DEV ? 'development' : 'production');
+  console.log('API URL:', API_URL);
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
@@ -45,8 +49,15 @@ export const login = async (email: string, password: string) => {
 };
 
 export const register = async (firstName: string, lastName: string, email: string, password: string) => {
-  const response = await api.post('/auth/register', { firstName, lastName, email, password });
-  return response.data;
+  try {
+    const response = await api.post('/auth/register', { firstName, lastName, email, password });
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 409) {
+      throw new Error('This email is already registered. Please use a different email or login instead.');
+    }
+    throw error; // Re-throw other errors
+  }
 };
 
 // Tasks API functions

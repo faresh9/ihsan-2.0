@@ -7,8 +7,20 @@ interface CalendarDayProps {
 }
 
 const CalendarDay: React.FC<CalendarDayProps> = ({ date }) => {
-  const { events } = useStore();
-  const dayEvents = events.filter(event => isSameDay(new Date(event.start), date));
+  const { events, eventsLoading } = useStore();
+
+  if (eventsLoading) {
+    return <div className="relative w-full h-full">
+      {/* Simple loading indicator or just the date */}
+      <div className="absolute top-1 left-1/2 transform -translate-x-1/2 text-sm">
+        {format(date, 'd')}
+      </div>
+    </div>;
+  }
+
+  const dayEvents = Array.isArray(events) 
+    ? events.filter(event => isSameDay(new Date(event.start), date))
+    : [];
 
   return (
     <div className="relative w-full h-full">
